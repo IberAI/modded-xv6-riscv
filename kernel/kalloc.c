@@ -56,7 +56,7 @@ kfree(void *pa)
 
   r = (struct run *)pa;
 
-  acquire(&kmem.lock);
+  acquire(&kmem.lock); 
   r->next = kmem.freelist;
   kmem.freelist = r;
   release(&kmem.lock);
@@ -79,4 +79,22 @@ kalloc(void)
   if (r)
     memset((char *)r, 5, PGSIZE); // fill with junk
   return (void *)r;
+}
+
+
+
+// Count Free Bytes of physical memory.
+// It does not count logically unused bytes in allocted pages.
+// Sums UnAllocted page memory.
+uint64
+kmempty(void)
+{
+  struct run *r;
+  acquire(&kmem.lock);
+  r = kmem.freelist;
+  uint64 empty = 0;
+  for (empty = 0; r != NULL; r=r->next, empty +=PGSIZE)
+    ;
+  release(&kmem.lock);
+  return empty;
 }
